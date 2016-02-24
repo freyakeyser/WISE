@@ -91,7 +91,7 @@ wisefish_near$type <- "near shore"
 wisefish <- rbind(wisefish_pel, wisefish_near)
 
 ### plotting on Minas Basin map
-map_sp <- readShapeSpatial("/Volumes/Macintosh HD/Users/freyakeyser/Desktop/Shapefiles 2/New_Polygon.shp")
+map_sp <- readShapeSpatial("./New_Polygon.shp")
 map <- fortify(map_sp)
 SP <- SpatialPoints(cbind(map$long, map$lat),
                     proj4string=CRS("+proj=utm +zone=20 +datum=WGS84 +units=m +no_defs "))
