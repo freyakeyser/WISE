@@ -1,43 +1,4 @@
-wisefish_pel <- data.frame(depth=rep(NA, 50), size=rep(NA,50), dist=rep(NA, 50), lat=rep(NA,50), long=rep(NA, 50))
-wisefish_pel$depth <- rnorm(n=50, mean=50, sd=10)
-wisefish_pel$size <- runif(n=50, min=10, max=100)
-wisefish_pel$dist <- wisefish_pel$depth / 0.02
-wisefish_pel$distkm <- wisefish_pel$dist / 1000
-
-wisefish_pel$lat[1:25] <- runif(n=25, min=45.2, max=45.32)
-wisefish_pel$lat[26:50] <- runif(n=25, min=45.32, max=45.4)
-wisefish_pel$distlat <- wisefish_pel$distkm * 0.02
-wisefish_pel$latloc[1:25] <- wisefish_pel$distlat[1:25] + wisefish_pel$lat[1:25]
-wisefish_pel$latloc[26:50] <- wisefish_pel$lat[26:50] - wisefish_pel$distlat[26:50]
-
-wisefish_pel <- arrange(wisefish_pel, dist)
-
-wisefish_pel$long[1:5] <- runif(n=5, min=-63.65, max=-63.5)
-wisefish_pel$long[6:10] <- runif(n=5, min=-63.85, max=-63.65)
-wisefish_pel$long[11:50] <- runif(n=40, min=-64.3, max=-63.85)
-
-
-wisefish_near <- data.frame(depth=rep(NA, 50), size=rep(NA,50), dist=rep(NA, 50), lat=rep(NA,50), long=rep(NA, 50))
-wisefish_near$depth <- rnorm(n=50, mean=15, sd=5)
-wisefish_near$size <- runif(n=50, min=5, max=60)
-wisefish_near$dist <- wisefish_pel$depth / 0.02
-wisefish_near$distkm <- wisefish_pel$dist / 1000
-
-wisefish_near$lat[1:25] <- runif(n=25, min=45.2, max=45.32)
-wisefish_near$lat[26:50] <- runif(n=25, min=45.32, max=45.4)
-wisefish_near$distlat <- wisefish_near$distkm * 0.02
-wisefish_near$latloc[1:25] <- wisefish_near$distlat[1:25] + wisefish_near$lat[1:25]
-wisefish_near$latloc[26:50] <- wisefish_near$lat[26:50] - wisefish_near$distlat[26:50]
-
-wisefish_near <- arrange(wisefish_near, dist)
-
-wisefish_near$long[1:5] <- runif(n=5, min=-63.65, max=-63.5)
-wisefish_near$long[6:10] <- runif(n=5, min=-63.85, max=-63.65)
-wisefish_near$long[11:50] <- runif(n=40, min=-64.3, max=-63.85)
-
-
-
-
+require(dplyr)
 require(ggplot2)
 require(reshape2)
 require(plyr)
@@ -52,6 +13,96 @@ require(VTrack)
 require(scales)
 
 
+wisefish_pel <- data.frame(depth=rep(NA, 70), size=rep(NA,70), dist=rep(NA, 70), distkm=rep(NA, 70),  distdeg=rep(NA, 70), shorelat=rep(NA,70), lat=rep(NA,70), long=rep(NA, 70))
+wisefish_pel$dist[1:30] <- runif(n=30, min=3000, max=10000)
+wisefish_pel$dist[31:50] <- runif(n=20, min=3000, max=5000)
+wisefish_pel$dist[51:70] <- runif(n=20, min=3000, max=10000)
+wisefish_pel$size <- runif(n=70, min=10, max=100)
+wisefish_pel$depth <- wisefish_pel$dist * 0.02
+wisefish_pel$distkm <- wisefish_pel$dist / 1000
+
+wisefish_pel$long[1:30] <- runif(n=30, min=-64.29, max=-63.95)
+wisefish_pel$long[31:50] <- runif(n=20, min=-63.95, max=-63.5)
+wisefish_pel$long[51:70] <- runif(n=20, min=-64.3, max=-64.2)
+
+wisefish_pel$shorelat[1:15] <- 45.385
+wisefish_pel$shorelat[16:30] <- 45.25
+wisefish_pel$shorelat[31:40] <- 45.385
+wisefish_pel$shorelat[41:50] <- 45.315
+wisefish_pel$shorelat[51:60] <- 45.15
+wisefish_pel$shorelat[61:70] <- 45.275
+
+wisefish_pel$distdeg <- wisefish_pel$distkm * 0.006
+
+wisefish_pel$lat[1:15] <- wisefish_pel$shorelat[1:15] - wisefish_pel$distdeg[1:15]
+wisefish_pel$lat[16:30] <- wisefish_pel$shorelat[16:30] + wisefish_pel$distdeg[16:30]
+wisefish_pel$lat[31:40] <- wisefish_pel$shorelat[31:40] - wisefish_pel$distdeg[31:40]
+wisefish_pel$lat[41:50] <- wisefish_pel$shorelat[41:50] + wisefish_pel$distdeg[41:50]
+wisefish_pel$lat[51:60] <- wisefish_pel$shorelat[51:60] + wisefish_pel$distdeg[51:60]
+wisefish_pel$lat[61:70] <- wisefish_pel$shorelat[61:70] - wisefish_pel$distdeg[61:70]
+
+
+ggplot() + geom_polygon(data=map, aes(x=long, y=lat, group=group, fill=hole)) + 
+  geom_path(data=map, aes(x=long, y=lat, group=group, fill=hole), colour="black") +
+  theme_bw(base_size=15) +
+  coord_equal() +
+  scale_fill_manual(values=c("lightgrey", "white"), guide="none") +
+  coord_cartesian(xlim = xlim, ylim = ylim) +
+  theme(legend.background=element_rect(fill="white", colour="black", size=0.4)) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border=element_rect(colour="black")) +
+  geom_point(data=wisefish_pel, aes(x=long, y=lat), shape=1)+
+  xlab("Longitude") +
+  ylab("Latitude") + 
+  scale_x_continuous(breaks=c(-65, -64.8, -64.6, -64.4, -64.2, -64.0, -63.8, -63.6, 
+                              -63.4, -63.2, -63.0))
+
+write.csv(wisefish_pel, "./wisefish_pel.csv")
+
+
+
+wisefish_near <- data.frame(depth=rep(NA, 80), size=rep(NA,80), dist=rep(NA, 80), distkm=rep(NA, 80),  distdeg=rep(NA, 80), shorelat=rep(NA,80), shorelong=rep(NA, 80), lat=rep(NA,80), long=rep(NA, 80))
+wisefish_near$dist <- runif(n=80, min=500, max=3000)
+wisefish_near$size <- runif(n=80, min=5, max=60)
+wisefish_near$depth <- wisefish_near$dist * 0.02
+wisefish_near$distkm <- wisefish_near$dist / 1000
+wisefish_near$distdeg <- wisefish_near$distkm * 0.006
+
+shore_s <- subset(map, lat>45.12 & lat<45.35 & long > -64.39 & long < -63.5 & hole=="FALSE", select=c(long,lat))
+shore_n <- subset(map, lat> 45.12 & lat>45.35 & long> -64.39 & long < -63.5 & hole=="FALSE", select=c(long,lat))
+shore_s$unq <- c(1:348)
+shore_n$unq <- c(1:1453)
+fish_s <- data.frame(unq=rep(NA, 40))
+fish_n <- data.frame(unq=rep(NA, 40))
+fish_s$unq <- runif(n=40, min=1, max=348)
+fish_n$unq <- runif(n=40, min=1, max=1453)
+fish_s$unq <- round(fish_s$unq)
+fish_n$unq <- round(fish_n$unq)
+shore_s <- join(shore_s, fish_s, type="right")
+shore_n <- join(shore_n, fish_n, type="right")
+
+wisefish_near$shorelong[1:40] <- shore_s$long
+wisefish_near$shorelat[1:40] <- shore_s$lat
+wisefish_near$shorelong[41:80] <- shore_n$long
+wisefish_near$shorelat[41:80] <- shore_n$lat
+
+wisefish_near$lat[1:40] <- wisefish_near$distdeg[1:40] + wisefish_near$shorelat[1:40]
+wisefish_near$lat[41:80] <- wisefish_near$shorelat[41:80] - wisefish_near$distdeg[41:80]
+wisefish_near$long <- wisefish_near$shorelong
+
+wisefish_near$long <- ifelse(wisefish_near$long< -64.3, wisefish_near$long +  wisefish_near$distdeg, wisefish_near$long)
+
+write.csv(wisefish_near, "./wisefish_near.csv")
+
+
+wisefish_pel <- read.csv("./wisefish_pel.csv")
+wisefish_near <- read.csv("./wisefish_near.csv")
+
+wisefish_near <- select(wisefish_near, -shorelong)
+
+wisefish_pel$type <- "pelagic"
+wisefish_near$type <- "near shore"
+
+wisefish <- rbind(wisefish_pel, wisefish_near)
 
 map_sp <- readShapeSpatial("/Volumes/Macintosh HD/Users/freyakeyser/Desktop/Shapefiles 2/New_Polygon.shp")
 map <- fortify(map_sp)
@@ -67,13 +118,22 @@ map$lat <- map$coords.x2
 xlim <- c(-64.95, -63.2)
 ylim <- c(44.95, 45.52)
 
-ggplot() + geom_polygon(data=map, aes(x=long, y=lat, group=group, fill=hole)) + geom_path(data=map, aes(x=long, y=lat, group=group, fill=hole), colour="black") +
+ggplot() + geom_polygon(data=map, aes(x=long, y=lat, group=group, fill=hole)) + 
+  geom_path(data=map, aes(x=long, y=lat, group=group, fill=hole), colour="black") +
   theme_bw(base_size=15) +
   coord_equal() +
   scale_fill_manual(values=c("lightgrey", "white"), guide="none") +
   coord_cartesian(xlim = xlim, ylim = ylim) +
   theme(legend.background=element_rect(fill="white", colour="black", size=0.4)) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border=element_rect(colour="black")) +
-  geom_point(data=wisefish_pel, aes(x=long, y=latloc), shape=1, colour="blue")+
+  geom_point(data=wisefish, aes(x=long, y=lat, shape=type))+
   xlab("Longitude") +
-  ylab("Latitude")
+  ylab("Latitude") +
+  scale_shape_manual(values=c(4,1), guide=FALSE) +
+  scale_x_continuous(breaks=c(-65, -64.8, -64.6, -64.4, -64.2, -64.0, -63.8, -63.6, 
+                              -63.4, -63.2, -63.0))
+
+wisefish <- select(wisefish, -X, -dist, -distdeg, -shorelat)
+
+write.csv(wisefish, "./wisefish.csv")
+
