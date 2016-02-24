@@ -1,3 +1,4 @@
+### packages
 require(dplyr)
 require(ggplot2)
 require(reshape2)
@@ -12,7 +13,7 @@ require(geosphere)
 require(VTrack)
 require(scales)
 
-
+### creating pelagic dataset
 wisefish_pel <- data.frame(depth=rep(NA, 70), size=rep(NA,70), dist=rep(NA, 70), distkm=rep(NA, 70),  distdeg=rep(NA, 70), shorelat=rep(NA,70), lat=rep(NA,70), long=rep(NA, 70))
 wisefish_pel$dist[1:30] <- runif(n=30, min=3000, max=10000)
 wisefish_pel$dist[31:50] <- runif(n=20, min=3000, max=5000)
@@ -41,25 +42,10 @@ wisefish_pel$lat[41:50] <- wisefish_pel$shorelat[41:50] + wisefish_pel$distdeg[4
 wisefish_pel$lat[51:60] <- wisefish_pel$shorelat[51:60] + wisefish_pel$distdeg[51:60]
 wisefish_pel$lat[61:70] <- wisefish_pel$shorelat[61:70] - wisefish_pel$distdeg[61:70]
 
-
-ggplot() + geom_polygon(data=map, aes(x=long, y=lat, group=group, fill=hole)) + 
-  geom_path(data=map, aes(x=long, y=lat, group=group, fill=hole), colour="black") +
-  theme_bw(base_size=15) +
-  coord_equal() +
-  scale_fill_manual(values=c("lightgrey", "white"), guide="none") +
-  coord_cartesian(xlim = xlim, ylim = ylim) +
-  theme(legend.background=element_rect(fill="white", colour="black", size=0.4)) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border=element_rect(colour="black")) +
-  geom_point(data=wisefish_pel, aes(x=long, y=lat), shape=1)+
-  xlab("Longitude") +
-  ylab("Latitude") + 
-  scale_x_continuous(breaks=c(-65, -64.8, -64.6, -64.4, -64.2, -64.0, -63.8, -63.6, 
-                              -63.4, -63.2, -63.0))
-
 write.csv(wisefish_pel, "./wisefish_pel.csv")
 
 
-
+### creating near shore dataset
 wisefish_near <- data.frame(depth=rep(NA, 80), size=rep(NA,80), dist=rep(NA, 80), distkm=rep(NA, 80),  distdeg=rep(NA, 80), shorelat=rep(NA,80), shorelong=rep(NA, 80), lat=rep(NA,80), long=rep(NA, 80))
 wisefish_near$dist <- runif(n=80, min=500, max=3000)
 wisefish_near$size <- runif(n=80, min=5, max=60)
@@ -93,7 +79,7 @@ wisefish_near$long <- ifelse(wisefish_near$long< -64.3, wisefish_near$long +  wi
 
 write.csv(wisefish_near, "./wisefish_near.csv")
 
-
+### reading in "good" datasets
 wisefish_pel <- read.csv("./wisefish_pel.csv")
 wisefish_near <- read.csv("./wisefish_near.csv")
 
@@ -104,6 +90,7 @@ wisefish_near$type <- "near shore"
 
 wisefish <- rbind(wisefish_pel, wisefish_near)
 
+### plotting on Minas Basin map
 map_sp <- readShapeSpatial("/Volumes/Macintosh HD/Users/freyakeyser/Desktop/Shapefiles 2/New_Polygon.shp")
 map <- fortify(map_sp)
 SP <- SpatialPoints(cbind(map$long, map$lat),
