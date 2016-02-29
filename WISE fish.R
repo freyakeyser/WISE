@@ -123,4 +123,4 @@ ggplot() + geom_polygon(data=map, aes(x=long, y=lat, group=group, fill=hole)) +
 wisefish <- select(wisefish, -X, -dist, -distdeg, -shorelat)
 
 write.csv(wisefish, "./wisefish.csv")
-
+read.csv("./wisefish.csv")
