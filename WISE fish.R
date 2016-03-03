@@ -102,8 +102,86 @@ map <- cbind(map, SP2)
 map$long <- map$coords.x1
 map$lat <- map$coords.x2
 
-xlim <- c(-64.95, -63.2)
+xlim <- c(-64.8, -63.2)
 ylim <- c(44.95, 45.52)
+
+
+createScaleBar <- function(lon,lat,distanceLon,distanceLat,distanceLegend, dist.units = "km"){
+  # First rectangle
+  bottomRight <- gcDestination(lon = lon, lat = lat, bearing = 90, dist = distanceLon, dist.units = dist.units, model = "WGS84")
+  
+  topLeft <- gcDestination(lon = lon, lat = lat, bearing = 0, dist = distanceLat, dist.units = dist.units, model = "WGS84")
+  rectangle <- cbind(lon=c(lon, lon, bottomRight[1,"long"], bottomRight[1,"long"], lon),
+                     lat = c(lat, topLeft[1,"lat"], topLeft[1,"lat"],lat, lat))
+  rectangle <- data.frame(rectangle, stringsAsFactors = FALSE)
+  
+  # Second rectangle t right of the first rectangle
+  bottomRight2 <- gcDestination(lon = lon, lat = lat, bearing = 90, dist = distanceLon*2, dist.units = dist.units, model = "WGS84")
+  rectangle2 <- cbind(lon = c(bottomRight[1,"long"], bottomRight[1,"long"], bottomRight2[1,"long"], bottomRight2[1,"long"], bottomRight[1,"long"]),
+                      lat=c(lat, topLeft[1,"lat"], topLeft[1,"lat"], lat, lat))
+  rectangle2 <- data.frame(rectangle2, stringsAsFactors = FALSE)
+  
+  # Now let's deal with the text
+  onTop <- gcDestination(lon = lon, lat = lat, bearing = 0, dist = distanceLegend, dist.units = dist.units, model = "WGS84")
+  onTop2 <- onTop3 <- onTop
+  onTop2[1,"long"] <- bottomRight[1,"long"]
+  onTop3[1,"long"] <- bottomRight2[1,"long"]
+  
+  legend <- rbind(onTop, onTop2, onTop3)
+  legend <- data.frame(cbind(legend, text = c(0, distanceLon, distanceLon*2)), stringsAsFactors = FALSE, row.names = NULL)
+  return(list(rectangle = rectangle, rectangle2 = rectangle2, legend = legend))
+}
+
+createOrientationArrow <- function(scaleBar, length, distance = 1, dist.units = "km"){
+  lon <- scaleBar$rectangle2[1,1]
+  lat <- scaleBar$rectangle2[1,2]
+  
+  # Bottom point of the arrow
+  begPoint <- gcDestination(lon = lon, lat = lat, bearing = 0, dist = distance, dist.units = dist.units, model = "WGS84")
+  lon <- begPoint[1,"long"]
+  lat <- begPoint[1,"lat"]
+  
+  # Let us create the endpoint
+  onTop <- gcDestination(lon = lon, lat = lat, bearing = 0, dist = length, dist.units = dist.units, model = "WGS84")
+  
+  leftArrow <- gcDestination(lon = onTop[1,"long"], lat = onTop[1,"lat"], bearing = 225, dist = length/5, dist.units = dist.units, model = "WGS84")
+  
+  rightArrow <- gcDestination(lon = onTop[1,"long"], lat = onTop[1,"lat"], bearing = 135, dist = length/5, dist.units = dist.units, model = "WGS84")
+  
+  res <- rbind(
+    cbind(x = lon, y = lat, xend = onTop[1,"long"], yend = onTop[1,"lat"]),
+    cbind(x = leftArrow[1,"long"], y = leftArrow[1,"lat"], xend = onTop[1,"long"], yend = onTop[1,"lat"]),
+    cbind(x = rightArrow[1,"long"], y = rightArrow[1,"lat"], xend = onTop[1,"long"], yend = onTop[1,"lat"]))
+  
+  res <- as.data.frame(res, stringsAsFactors = FALSE)
+  
+  # Coordinates from which "N" will be plotted
+  coordsN <- cbind(x = lon, y = (lat + onTop[1,"lat"])/2)
+  
+  return(list(res = res, coordsN = coordsN))
+}
+
+scaleBar <- function(lon, lat, distanceLon, distanceLat, distanceLegend, dist.unit = "km", rec.fill = "white", rec.colour = "black", rec2.fill = "black", rec2.colour = "black", legend.colour = "black", legend.size = 3, orientation = TRUE, arrow.length = 500, arrow.distance = 300, arrow.North.size = 6){
+  laScaleBar <- createScaleBar(lon = lon, lat = lat, distanceLon = distanceLon, distanceLat = distanceLat, distanceLegend = distanceLegend, dist.unit = dist.unit)
+  # First rectangle
+  rectangle1 <- geom_polygon(data = laScaleBar$rectangle, aes(x = lon, y = lat), fill = rec.fill, colour = rec.colour)
+  
+  # Second rectangle
+  rectangle2 <- geom_polygon(data = laScaleBar$rectangle2, aes(x = lon, y = lat), fill = rec2.fill, colour = rec2.colour)
+  
+  # Legend
+  scaleBarLegend <- annotate("text", label = paste(laScaleBar$legend[,"text"], dist.unit, sep=""), x = laScaleBar$legend[,"long"], y = laScaleBar$legend[,"lat"], size = legend.size, colour = legend.colour)
+  
+  res <- list(rectangle1, rectangle2, scaleBarLegend)
+  
+  if(orientation){# Add an arrow pointing North
+    coordsArrow <- createOrientationArrow(scaleBar = laScaleBar, length = arrow.length, distance = arrow.distance, dist.unit = dist.unit)
+    arrow <- list(geom_segment(data = coordsArrow$res, aes(x = x, y = y, xend = xend, yend = yend)), annotate("text", label = "N", x = coordsArrow$coordsN[1,"x"], y = coordsArrow$coordsN[1,"y"], size = arrow.North.size, colour = "black"))
+    res <- c(res, arrow)
+  }
+  return(res)
+}
+
 
 ggplot() + geom_polygon(data=map, aes(x=long, y=lat, group=group, fill=hole)) + 
   geom_path(data=map, aes(x=long, y=lat, group=group, fill=hole), colour="black") +
@@ -113,14 +191,14 @@ ggplot() + geom_polygon(data=map, aes(x=long, y=lat, group=group, fill=hole)) +
   coord_cartesian(xlim = xlim, ylim = ylim) +
   theme(legend.background=element_rect(fill="white", colour="black", size=0.4)) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border=element_rect(colour="black")) +
-  geom_point(data=wisefish, aes(x=long, y=lat, shape=type))+
+  #geom_point(data=wisefish, aes(x=long, y=lat, shape=type))+
   xlab("Longitude") +
   ylab("Latitude") +
-  scale_shape_manual(values=c(4,1), guide=FALSE) +
-  scale_x_continuous(breaks=c(-65, -64.8, -64.6, -64.4, -64.2, -64.0, -63.8, -63.6, 
-                              -63.4, -63.2, -63.0))
+  #scale_shape_manual(values=c(4,1), guide=FALSE) +
+  scale_x_continuous(breaks=c(-64.8, -64.6, -64.4, -64.2, -64.0, -63.8, -63.6, 
+                              -63.4, -63.2))
 
 wisefish <- select(wisefish, -X, -dist, -distdeg, -shorelat)
 
 write.csv(wisefish, "./wisefish.csv")
-read.csv("./wisefish.csv")
+wisefish <- read.csv("./wisefish.csv")

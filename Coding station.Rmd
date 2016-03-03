@@ -1,0 +1,50 @@
+---
+Coding station
+---
+
+### Let's make a datasheet with your name, session, and sampling method
+```{r}
+require(ggplot2)
+wise <- data.frame(name=rep(NA, 25), session=rep(NA, 25), sampling=rep(NA, 25))
+
+### Enter your name using:
+### wise$name[ROWNUMBER] <- "Freya"
+### press COMMAND + ENTER to run
+
+wise$name[1] <- "Freya"
+
+### Enter your session using:
+### wise$session[ROWNUMBER] <- "Morning" or "Afternoon"
+### press COMMAND + ENTER to run
+
+wise$session[1] <- "Morning"
+
+### Enter your sampling method using:
+### wise$sampling[ROWNUMBER] <- "Angling", "Trawling", "Seining"
+### press COMMAND + ENTER to run
+
+wise$sampling[1] <- "Angling"
+```
+
+### Check out a plot of fish lengths
+```{r}
+wisefish <- read.csv("./wisefish.csv")
+
+lengths <- ggplot() + geom_histogram(data=wisefish, aes(size), colour="black", fill="red", binwidth=5) + theme_classic()
+print(lengths)
+
+### change the colour of the bars using fill="COLOUR" (blue, green, yellow, violet, grey, orange, etc!)
+lengths <- ggplot() + geom_histogram(data=wisefish, aes(size), colour="black", fill="blue", binwidth=5) + theme_classic()
+print(lengths)
+```
+
+### How many fish were collected in this study?
+```{r}
+### Our dataset is called "wisefish". Each row represents one fish, so we will count the rows using the nrow() function on the dataset wisefish
+
+nrow(wisefish)
+
+```
+
+
+
