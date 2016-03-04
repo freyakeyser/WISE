@@ -30,17 +30,27 @@ wise$sampling[1] <- "Angling"
 ```{r}
 wisefish <- read.csv("./wisefish.csv")
 
-lengths <- ggplot() + geom_histogram(data=wisefish, aes(size), colour="black", fill="red", binwidth=5) + theme_classic()
-print(lengths)
+depth.size <- ggplot() + geom_point(data=wisefish, aes(depth, size), colour="black", fill="red") + theme_classic()
+print(depth.size)
 
-### change the colour of the bars using fill="COLOUR" (blue, green, yellow, violet, grey, orange, etc!)
-lengths <- ggplot() + geom_histogram(data=wisefish, aes(size), colour="black", fill="blue", binwidth=5) + theme_classic()
-print(lengths)
+### change the colour of the points using colour="COLOUR" (blue, green, yellow, violet, grey, orange, etc!)
+depth.size <- ggplot() + geom_point(data=wisefish, aes(depth, size), colour="red") + theme_classic()
+print(depth.size)
+
+### change the shape of the points using shape="NUMBER" (see chart for shape numbers).
+depth.size <- ggplot() + geom_point(data=wisefish, aes(depth, size), col="red", shape=1) + theme_classic()
+print(depth.size)
+
+### change the size of the points using size="NUMBER" (bigger number = bigger point).
+depth.size <- ggplot() + geom_point(data=wisefish, aes(depth, size), col="red", shape=1, size=3) + theme_classic()
+print(depth.size)
+
 ```
 
 ### How many fish were collected in this study?
 ```{r}
-### Our dataset is called "wisefish". Each row represents one fish, so we will count the rows using the nrow() function on the dataset wisefish
+### Counting the points will take WAY too long! Let's save time by coding!
+### Our dataset is called "wisefish". Each row represents one fish, so we will automatically count the rows using the nrow() function on the dataset "wisefish"
 
 nrow(wisefish)
 
